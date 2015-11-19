@@ -2,7 +2,7 @@ package neruralnet;
 
 import neruralnet.layer.Layer;
 
-public class NeuralNet implements Layer {
+public class FFNeuralNet implements Layer {
 
 	private int n;
 	private int m;
@@ -10,7 +10,7 @@ public class NeuralNet implements Layer {
 	private Layer[] layers;
 	private double[][] innerLayerOut;
 
-	public NeuralNet(Layer... layers) {
+	public FFNeuralNet(Layer... layers) {
 		this.layers = layers;
 
 		n = this.layers[0].getNumberOfInputs();
