@@ -1,7 +1,7 @@
 package neruralnet.layer;
 
 public interface Layer {
-	public void setWeigths(double[] weights);
+	public void setWeigths(double[] weights, int offset);
 	public void apply(double[] inputs, double[] outputs);
 	public double[] getWeights();
 	public int getNumberOfInputs();
