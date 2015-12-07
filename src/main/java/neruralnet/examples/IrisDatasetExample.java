@@ -24,6 +24,8 @@ import hr.fer.zemris.optim.evol.populationgenerator.PopulationGenerator;
 import hr.fer.zemris.optim.evol.populationgenerator.impl.FloatingPointChromosomePG;
 import hr.fer.zemris.optim.evol.selection.impl.KTournamentSelection;
 import hr.fer.zemris.optim.evol.selection.impl.SelectionTournament;
+import hr.fer.zemris.optim.rng.IRNG;
+import hr.fer.zemris.optim.rng.RNG;
 import neruralnet.FFNeuralNet;
 import neruralnet.function.activation.ActivationFun;
 import neruralnet.function.distribution.Distribution;
@@ -40,9 +42,16 @@ public class IrisDatasetExample {
 
 		Crossover<FloatingPointChromosome> crossover = new FPSimpleCrossover();
 
-		Mutation<FloatingPointChromosome> mutation = new FPGaussianMutation(0, 1, 0.01);
+		Mutation<FloatingPointChromosome> mutation = new FPGaussianMutation(0, 0.5, 0.05);
 
-		Distribution dist = new NormalDist(0, 1);
+		Distribution dist = (n) -> {
+			double[] elems = new double[n];
+			IRNG rand = RNG.getRNG();
+			for(int i = 0; i < n; i++) {
+				elems[i] = rand.nextDouble(-0.5, 0.5); 
+			}
+			return elems;
+		}; 
 		
 		FFNeuralNet ffn = new FFNeuralNet(new FullyConnected(4, 5, dist), new ActivationFunLayer(ActivationFun.sigmoid, 5), new FullyConnected(5, 3, dist),new ActivationFunLayer(ActivationFun.sigmoid, 3)
 				, new FullyConnected(3, 3, dist), new ActivationFunLayer(ActivationFun.sigmoid, 3));
@@ -52,7 +61,7 @@ public class IrisDatasetExample {
 		IrisDataSetEvaluator evaluator = new IrisDataSetEvaluator("lib/iris.txt", ffn);
 
 		GeneticAlgorithm<FloatingPointChromosome> ga = new EliminationGA<>(50, pg, crossover, mutation, evaluator,
-				10000 * 5, selection);
+				10000 * 7, selection);
 
 		FloatingPointChromosome res = ga.run();
 
@@ -67,7 +76,7 @@ public class IrisDatasetExample {
 			ffn.apply(t.inputs, out);
 			
 			for(int i = 0; i < 3; i++) {
-				out[i] = out[i] > 0.5 ? 1 : 0;
+				out[i] = out[i] >= 0.5 ? 1 : 0;
 			}
 			
 			if(!Arrays.equals(out, t.out)) {
@@ -77,7 +86,7 @@ public class IrisDatasetExample {
 		
 		System.out.println(wrong);
 		System.out.println(evaluator.test.size());
-
+		System.out.println(evaluator.time / 1000000000.);
 	}
 
 	private static class IrisDataSetEvaluator implements Evaluator<FloatingPointChromosome> {
@@ -85,6 +94,7 @@ public class IrisDatasetExample {
 		private List<Tuple> train;
 		public List<Tuple> test;
 		private FFNeuralNet net;
+		public long time = 0;
 
 		public IrisDataSetEvaluator(String filename, FFNeuralNet net) throws IOException {
 			this.net = net;
@@ -133,6 +143,7 @@ public class IrisDatasetExample {
 
 		@Override
 		public void evaluate(FloatingPointChromosome arg0) {
+			long start = System.nanoTime();
 			double[] ws = arg0.data;
 			double[] netOut = new double[3];
 			net.setWeigths(ws, 0);
@@ -144,6 +155,7 @@ public class IrisDatasetExample {
 				}
 			}
 			arg0.fitness = -error;
+			time += (System.nanoTime() - start);
 		}
 
 		public static class Tuple {
