@@ -65,7 +65,7 @@ public class IrisDatasetExample {
 
 		FloatingPointChromosome res = ga.run();
 
-		System.out.println("Result: " + res.fitness);
+		System.out.println("Error on train set: " + -res.fitness);
 		
 		int wrong = 0;
 		
@@ -83,10 +83,7 @@ public class IrisDatasetExample {
 				wrong++;
 			}
 		}
-		
-		System.out.println(wrong);
-		System.out.println(evaluator.test.size());
-		System.out.println(evaluator.time / 1000000000.);
+		System.out.println("Classification accuracy on test: " + ((double)wrong / evaluator.test.size()));
 	}
 
 	private static class IrisDataSetEvaluator implements Evaluator<FloatingPointChromosome> {
