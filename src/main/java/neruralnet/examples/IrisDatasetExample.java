@@ -40,7 +40,7 @@ public class IrisDatasetExample {
 
 		Crossover<FloatingPointChromosome> crossover = new FPSimpleCrossover();
 
-		Mutation<FloatingPointChromosome> mutation = new FPGaussianMutation(0, 1, 0.01);
+		Mutation<FloatingPointChromosome> mutation = new FPGaussianMutation(0, 0.1, 0.01);
 
 		Distribution dist = new NormalDist(0, 1);
 		
@@ -52,11 +52,11 @@ public class IrisDatasetExample {
 		IrisDataSetEvaluator evaluator = new IrisDataSetEvaluator("lib/iris.txt", ffn);
 
 		GeneticAlgorithm<FloatingPointChromosome> ga = new EliminationGA<>(50, pg, crossover, mutation, evaluator,
-				10000 * 5, selection);
+				10000 * 7, selection);
 
 		FloatingPointChromosome res = ga.run();
 
-		System.out.println("Result: " + res.fitness);
+		System.out.println("Error on train set: " + -res.fitness);
 		
 		int wrong = 0;
 		
@@ -74,9 +74,8 @@ public class IrisDatasetExample {
 				wrong++;
 			}
 		}
-		
 		System.out.println(wrong);
-		System.out.println(evaluator.test.size());
+		System.out.println("Classification accuracy on test: " + ((double)wrong / evaluator.test.size()));
 
 	}
 
