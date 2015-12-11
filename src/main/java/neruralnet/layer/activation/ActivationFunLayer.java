@@ -1,9 +1,9 @@
 package neruralnet.layer.activation;
 
 import neruralnet.function.activation.ActivationFun;
-import neruralnet.layer.Layer;
+import neruralnet.layer.StatelessLayer;
 
-public class ActivationFunLayer implements Layer {
+public class ActivationFunLayer extends StatelessLayer {
 
 	private ActivationFun fun;
 	private int n;

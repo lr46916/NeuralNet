@@ -26,7 +26,7 @@ import hr.fer.zemris.optim.evol.selection.impl.KTournamentSelection;
 import hr.fer.zemris.optim.evol.selection.impl.SelectionTournament;
 import hr.fer.zemris.optim.rng.IRNG;
 import hr.fer.zemris.optim.rng.RNG;
-import neruralnet.FFNeuralNet;
+import neruralnet.StatelessLayerdNeuralNet;
 import neruralnet.function.activation.ActivationFun;
 import neruralnet.function.distribution.Distribution;
 import neruralnet.function.distribution.impl.NormalDist;
@@ -53,7 +53,7 @@ public class IrisDatasetExample {
 			return elems;
 		}; 
 		
-		FFNeuralNet ffn = new FFNeuralNet(new FullyConnected(4, 5, dist), new ActivationFunLayer(ActivationFun.sigmoid, 5), new FullyConnected(5, 3, dist),new ActivationFunLayer(ActivationFun.sigmoid, 3)
+		StatelessLayerdNeuralNet ffn = new StatelessLayerdNeuralNet(new FullyConnected(4, 5, dist), new ActivationFunLayer(ActivationFun.sigmoid, 5), new FullyConnected(5, 3, dist),new ActivationFunLayer(ActivationFun.sigmoid, 3)
 				, new FullyConnected(3, 3, dist), new ActivationFunLayer(ActivationFun.sigmoid, 3));
 		
 		PopulationGenerator<FloatingPointChromosome> pg = new FloatingPointChromosomePG(ffn.getNumberOfWeights());
@@ -90,10 +90,10 @@ public class IrisDatasetExample {
 
 		private List<Tuple> train;
 		public List<Tuple> test;
-		private FFNeuralNet net;
+		private StatelessLayerdNeuralNet net;
 		public long time = 0;
 
-		public IrisDataSetEvaluator(String filename, FFNeuralNet net) throws IOException {
+		public IrisDataSetEvaluator(String filename, StatelessLayerdNeuralNet net) throws IOException {
 			this.net = net;
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(new BufferedInputStream(new FileInputStream(filename))));

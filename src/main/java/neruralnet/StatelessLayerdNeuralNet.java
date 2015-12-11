@@ -1,8 +1,9 @@
 package neruralnet;
 
 import neruralnet.layer.Layer;
+import neruralnet.layer.StatelessLayer;
 
-public class FFNeuralNet implements Layer {
+public class StatelessLayerdNeuralNet extends StatelessLayer {
 
 	private int n;
 	private int m;
@@ -10,7 +11,7 @@ public class FFNeuralNet implements Layer {
 	private Layer[] layers;
 	private double[][] innerLayerOut;
 
-	public FFNeuralNet(Layer... layers) {
+	public StatelessLayerdNeuralNet(Layer... layers) {
 		this.layers = layers;
 
 		n = this.layers[0].getNumberOfInputs();
@@ -31,6 +32,10 @@ public class FFNeuralNet implements Layer {
 			}
 		}
 	}
+	
+	public Layer[] getLayers() {
+		return layers;
+	}
 
 	public void setWeigths(double[] weights, int offset) {
 		assert (weights.length == numOfWeights);
@@ -44,7 +49,6 @@ public class FFNeuralNet implements Layer {
 		assert (inputs.length == n && outputs.length == m);
 
 		layers[0].apply(inputs, innerLayerOut[0]);
-
 		for (int i = 1; i < layers.length; i++) {
 			layers[i].apply(innerLayerOut[i - 1], innerLayerOut[i]);
 		}

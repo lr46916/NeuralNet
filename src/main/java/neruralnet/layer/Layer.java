@@ -7,4 +7,5 @@ public interface Layer {
 	public int getNumberOfInputs();
 	public int getNumberOfOutputs();
 	public int getNumberOfWeights();
+	public boolean isStateful();
 }
