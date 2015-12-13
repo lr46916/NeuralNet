@@ -1,5 +1,7 @@
 package neruralnet;
 
+import java.util.Arrays;
+
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatelessLayer;
 

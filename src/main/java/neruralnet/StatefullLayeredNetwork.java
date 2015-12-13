@@ -6,13 +6,13 @@ import java.util.List;
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatefulLayer;
 
-public class StateFullLayeredNetwork extends StatefulLayer {
+public class StatefullLayeredNetwork extends StatefulLayer {
 
 	private StatelessLayerdNeuralNet network;
 	private List<StatefulLayer> stateFullLayers;
 	private double[] contextData;
 	
-	public StateFullLayeredNetwork(Layer... layers) {
+	public StatefullLayeredNetwork(Layer... layers) {
 		super();
 		this.network = new StatelessLayerdNeuralNet(layers);
 		stateFullLayers = new ArrayList<>();
