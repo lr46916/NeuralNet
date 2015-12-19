@@ -1,12 +1,15 @@
 package neruralnet;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatelessLayer;
 
-public class StatelessLayerdNeuralNet extends StatelessLayer {
+public class StatelessLayerdNeuralNet extends StatelessLayer implements Serializable {
 
+	private static final long serialVersionUID = 7405336452347186813L;
+	
 	private int n;
 	private int m;
 	private int numOfWeights;

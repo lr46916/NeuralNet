@@ -1,5 +1,6 @@
 package neruralnet.layer.impl;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import neruralnet.function.activation.ActivationFun;
@@ -8,8 +9,10 @@ import neruralnet.function.distribution.impl.NormalDist;
 import neruralnet.layer.StatefulLayer;
 import neruralnet.layer.activation.ActivationFunLayer;
 
-public class ElmanLayer extends StatefulLayer {
+public class ElmanLayer extends StatefulLayer implements Serializable{
 
+	private static final long serialVersionUID = 1706291596813401214L;
+	
 	private double[] extendedInput;
 	private int n;
 	private int m;

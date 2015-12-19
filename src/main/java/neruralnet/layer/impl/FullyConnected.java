@@ -1,5 +1,6 @@
 package neruralnet.layer.impl;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import neruralnet.function.distribution.Distribution;
@@ -7,8 +8,10 @@ import neruralnet.function.distribution.impl.NormalDist;
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatelessLayer;
 
-public class FullyConnected extends StatelessLayer {
+public class FullyConnected extends StatelessLayer implements Serializable{
 
+	private static final long serialVersionUID = 3878314843105195424L;
+	
 	private double[] weights;
 	private int n, m;
 

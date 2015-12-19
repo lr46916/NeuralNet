@@ -1,10 +1,14 @@
 package neruralnet.layer.activation;
 
+import java.io.Serializable;
+
 import neruralnet.function.activation.ActivationFun;
 import neruralnet.layer.StatelessLayer;
 
-public class ActivationFunLayer extends StatelessLayer {
+public class ActivationFunLayer extends StatelessLayer implements Serializable{
 
+	private static final long serialVersionUID = 1424958538771748644L;
+	
 	private ActivationFun fun;
 	private int n;
 	

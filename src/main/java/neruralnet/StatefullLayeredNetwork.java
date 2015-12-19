@@ -1,12 +1,15 @@
 package neruralnet;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatefulLayer;
 
-public class StatefullLayeredNetwork extends StatefulLayer {
+public class StatefullLayeredNetwork extends StatefulLayer implements Serializable {
+
+	private static final long serialVersionUID = -5148061112964692528L;
 
 	private StatelessLayerdNeuralNet network;
 	private List<StatefulLayer> stateFullLayers;
