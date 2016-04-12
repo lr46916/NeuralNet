@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import neruralnet.function.activation.ActivationFun;
 import neruralnet.layer.Layer;
 import neruralnet.layer.StatefulLayer;
 
@@ -11,15 +12,29 @@ public class StatefullLayeredNetwork extends StatefulLayer implements Serializab
 
 	private static final long serialVersionUID = -5148061112964692528L;
 
-	private StatelessLayerdNeuralNet network;
+	private StatelessLayeredNeuralNet network;
 	private List<StatefulLayer> stateFullLayers;
-	private double[] contextData;
-	
-	public StatefullLayeredNetwork(Layer... layers) {
-		super();
-		this.network = new StatelessLayerdNeuralNet(layers);
+	private int contextSize = 0;
+
+	public StatefullLayeredNetwork(Layer[] layers, ActivationFun[] activation) {
+		initalize(layers, activation);
+	}
+
+	public StatefullLayeredNetwork(List<Layer> layers, List<ActivationFun> activation) {
+		Layer[] layerArray = new Layer[layers.size()];
+		for (int i = 0; i < layers.size(); ++i) {
+			layerArray[i] = layers.get(i);
+		}
+		ActivationFun[] activationArray = new ActivationFun[activation.size()];
+		for (int i = 0; i < activation.size(); ++i) {
+			activationArray[i] = activation.get(i);
+		}
+		initalize(layerArray, activationArray);
+	}
+
+	private void initalize(Layer[] layers, ActivationFun[] activation) {
+		this.network = new StatelessLayeredNeuralNet(layers, activation);
 		stateFullLayers = new ArrayList<>();
-		int contextSize = 0;
 		for(Layer l : layers) {
 			if(l.isStateful()) {
 				StatefulLayer tmp = (StatefulLayer) l;
@@ -27,10 +42,9 @@ public class StatefullLayeredNetwork extends StatefulLayer implements Serializab
 				contextSize += tmp.getContextSize();
 			}
 		}
-		contextData = new double[contextSize];
 	}
-	
-	public Layer[] getLayers(){
+
+	public Layer[] getLayers() {
 		return network.getLayers();
 	}
 
@@ -67,8 +81,9 @@ public class StatefullLayeredNetwork extends StatefulLayer implements Serializab
 	@Override
 	public double[] getContext() {
 		int c = 0;
-		for(StatefulLayer statefullLayer : stateFullLayers) {
-			for(double x : statefullLayer.getContext()) {
+		double[] contextData = new double[contextSize];
+		for (StatefulLayer statefullLayer : stateFullLayers) {
+			for (double x : statefullLayer.getContext()) {
 				contextData[c++] = x;
 			}
 		}
@@ -77,12 +92,12 @@ public class StatefullLayeredNetwork extends StatefulLayer implements Serializab
 
 	@Override
 	public int getContextSize() {
-		return contextData.length;
+		return contextSize;
 	}
 
 	@Override
 	public void setContext(double[] context, int offset) {
-		for(StatefulLayer statefullLayer : stateFullLayers) {
+		for (StatefulLayer statefullLayer : stateFullLayers) {
 			statefullLayer.setContext(context, offset);
 			offset += statefullLayer.getContextSize();
 		}

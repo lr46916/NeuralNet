@@ -9,14 +9,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+import java.util.Random;
 
-import hr.fer.zemris.optim.algorithms.evol.ga.GeneticAlgorithm;
-import hr.fer.zemris.optim.algorithms.evol.ga.tournament.EliminationGA;
 import hr.fer.zemris.optim.evol.Crossover;
 import hr.fer.zemris.optim.evol.Evaluator;
 import hr.fer.zemris.optim.evol.Mutation;
+import hr.fer.zemris.optim.evol.algorithms.ga.GeneticAlgorithm;
+import hr.fer.zemris.optim.evol.algorithms.ga.tournament.EliminationGA;
 import hr.fer.zemris.optim.evol.chromosome.FloatingPointChromosome;
 import hr.fer.zemris.optim.evol.crossovers.impl.floatingpoint.FPSimpleCrossover;
 import hr.fer.zemris.optim.evol.mutations.impl.folatingpoint.FPGaussianMutation;
@@ -24,15 +23,9 @@ import hr.fer.zemris.optim.evol.populationgenerator.PopulationGenerator;
 import hr.fer.zemris.optim.evol.populationgenerator.impl.FloatingPointChromosomePG;
 import hr.fer.zemris.optim.evol.selection.impl.KTournamentSelection;
 import hr.fer.zemris.optim.evol.selection.impl.SelectionTournament;
-import hr.fer.zemris.optim.rng.IRNG;
-import hr.fer.zemris.optim.rng.RNG;
-import neruralnet.StatelessLayerdNeuralNet;
+import neruralnet.NeuralNetUtil;
+import neruralnet.StatelessLayeredNeuralNet;
 import neruralnet.function.activation.ActivationFun;
-import neruralnet.function.distribution.Distribution;
-import neruralnet.function.distribution.impl.NormalDist;
-import neruralnet.layer.Layer;
-import neruralnet.layer.activation.ActivationFunLayer;
-import neruralnet.layer.impl.FullyConnected;
 
 public class IrisDatasetExample {
 
@@ -44,56 +37,53 @@ public class IrisDatasetExample {
 
 		Mutation<FloatingPointChromosome> mutation = new FPGaussianMutation(0, 0.5, 0.05);
 
-		Distribution dist = (n) -> {
-			double[] elems = new double[n];
-			IRNG rand = RNG.getRNG();
-			for(int i = 0; i < n; i++) {
-				elems[i] = rand.nextDouble(-0.5, 0.5); 
+		StatelessLayeredNeuralNet ffn = NeuralNetUtil.createNetwork("4x5x3x3", (n) -> {
+			Random rand = new Random();
+			double[] res = new double[n];
+			for (int i = 0; i < n; ++i) {
+				res[i] = rand.nextDouble() - 1;
 			}
-			return elems;
-		}; 
-		
-		StatelessLayerdNeuralNet ffn = new StatelessLayerdNeuralNet(new FullyConnected(4, 5, dist), new ActivationFunLayer(ActivationFun.sigmoid, 5), new FullyConnected(5, 3, dist),new ActivationFunLayer(ActivationFun.sigmoid, 3)
-				, new FullyConnected(3, 3, dist), new ActivationFunLayer(ActivationFun.sigmoid, 3));
-		
+			return res;
+		} , ActivationFun.sigmoid, ActivationFun.sigmoid, ActivationFun.sigmoid);
+
 		PopulationGenerator<FloatingPointChromosome> pg = new FloatingPointChromosomePG(ffn.getNumberOfWeights());
-		
+
 		IrisDataSetEvaluator evaluator = new IrisDataSetEvaluator("lib/iris.txt", ffn);
 
 		GeneticAlgorithm<FloatingPointChromosome> ga = new EliminationGA<>(50, pg, crossover, mutation, evaluator,
-				10000 * 7, selection);
+				10000 * 3, selection);
 
 		FloatingPointChromosome res = ga.run();
 
 		System.out.println("Error on train set: " + -res.fitness);
-		
+
 		int wrong = 0;
-		
+
 		ffn.setWeigths(res.data, 0);
 		double[] out = new double[3];
-		for(neruralnet.examples.IrisDatasetExample.IrisDataSetEvaluator.Tuple t : evaluator.test) {
-			
+		for (neruralnet.examples.IrisDatasetExample.IrisDataSetEvaluator.Tuple t : evaluator.test) {
+
 			ffn.apply(t.inputs, out);
-			
-			for(int i = 0; i < 3; i++) {
+
+			for (int i = 0; i < 3; i++) {
 				out[i] = out[i] >= 0.5 ? 1 : 0;
 			}
-			
-			if(!Arrays.equals(out, t.out)) {
+
+			if (!Arrays.equals(out, t.out)) {
 				wrong++;
 			}
 		}
-		System.out.println("Classification accuracy on test: " + ((double)wrong / evaluator.test.size()));
+		System.out.println("Classification accuracy on test: "
+				+ ((double) (evaluator.test.size() - wrong) / evaluator.test.size()));
 	}
 
 	private static class IrisDataSetEvaluator implements Evaluator<FloatingPointChromosome> {
 
 		private List<Tuple> train;
 		public List<Tuple> test;
-		private StatelessLayerdNeuralNet net;
-		public long time = 0;
+		private StatelessLayeredNeuralNet net;
 
-		public IrisDataSetEvaluator(String filename, StatelessLayerdNeuralNet net) throws IOException {
+		public IrisDataSetEvaluator(String filename, StatelessLayeredNeuralNet net) throws IOException {
 			this.net = net;
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(new BufferedInputStream(new FileInputStream(filename))));
@@ -114,15 +104,14 @@ public class IrisDatasetExample {
 
 				double[] in = new double[inVal.length];
 				double[] out = new double[outVal.length];
-				
-				for(int i = 0; i < 4; i++) {
+
+				for (int i = 0; i < 4; i++) {
 					in[i] = Double.parseDouble(inVal[i]);
 				}
-				for(int i = 0; i < 3; i++) {
+				for (int i = 0; i < 3; i++) {
 					out[i] = Double.parseDouble(outVal[i]);
 				}
-				
-				
+
 				data.add(new Tuple(in, out));
 			}
 
@@ -130,17 +119,12 @@ public class IrisDatasetExample {
 			int ts = (int) (data.size() * 0.8);
 			train = data.subList(0, ts);
 			test = data.subList(ts + 1, data.size());
-			
-//			System.out.println(test);
-//			
-//			System.exit(-1);
 
 			br.close();
 		}
 
 		@Override
 		public void evaluate(FloatingPointChromosome arg0) {
-			long start = System.nanoTime();
 			double[] ws = arg0.data;
 			double[] netOut = new double[3];
 			net.setWeigths(ws, 0);
@@ -151,8 +135,7 @@ public class IrisDatasetExample {
 					error += (netOut[i] - t.out[i]) * (netOut[i] - t.out[i]);
 				}
 			}
-			arg0.fitness = -error;
-			time += (System.nanoTime() - start);
+			arg0.fitness = -(error / train.size());
 		}
 
 		public static class Tuple {
@@ -164,8 +147,8 @@ public class IrisDatasetExample {
 				this.inputs = inputs;
 				this.out = out;
 			}
-			
-			public String toString(){
+
+			public String toString() {
 				return "inputs: " + Arrays.toString(inputs) + ", out: " + Arrays.toString(out);
 			}
 		}

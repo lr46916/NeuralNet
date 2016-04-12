@@ -2,67 +2,89 @@ package neruralnet.layer.impl;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import neruralnet.function.activation.ActivationFun;
 import neruralnet.function.distribution.Distribution;
-import neruralnet.function.distribution.impl.NormalDist;
+import neruralnet.layer.BPLayer;
+import neruralnet.layer.Layer;
+import neruralnet.layer.PrototypeLayer;
 import neruralnet.layer.StatefulLayer;
-import neruralnet.layer.activation.ActivationFunLayer;
 
-public class ElmanLayer extends StatefulLayer implements Serializable{
+public class ElmanLayer extends StatefulLayer implements Serializable, PrototypeLayer, BPLayer {
 
-	private static final long serialVersionUID = 1706291596813401214L;
-	
-	private double[] extendedInput;
-	private int n;
-	private int m;
-	private FullyConnected fullyConnected;
-	private ActivationFunLayer activationFun;
+	private static final long serialVersionUID = 3878314843105195424L;
 
-	public ElmanLayer(int n, int m, Distribution dist, ActivationFun activation) {
-		this.n = n;
-		this.m = m;
-		extendedInput = new double[n + m];
-		fullyConnected = new FullyConnected(n + m, m, dist);
-		activationFun = new ActivationFunLayer(activation, m);
-	}
+	private double[][] weights;
+	private int n, m;
+	private ActivationFun activation;
+	private double[] context;
 
 	public ElmanLayer(int n, int m, ActivationFun activation) {
+		super();
 		this.n = n;
 		this.m = m;
-		extendedInput = new double[n + m];
-		fullyConnected = new FullyConnected(n + m, m);
-		activationFun = new ActivationFunLayer(activation, m);
+		this.activation = activation;
+		this.context = new double[m];
+		weights = new double[m][n + m + 1];
+	}
+
+	public ElmanLayer(int n, int m, ActivationFun activation, Distribution dist) {
+		this(n, m, activation);
+		setWeigths(dist.getElements((n + m + 1) * m), 0);
+	}
+
+	@Override
+	public void setWeigths(double[] weights, int offset) {
+		assert ((n + 1) * m <= weights.length - offset);
+		for (int j = 0; j < m; ++j) {
+			for (int i = 0; i < n + 1; i++) {
+				this.weights[j][i] = weights[offset++];
+			}
+		}
 	}
 
 	@Override
 	public void apply(double[] inputs, double[] outputs) {
-		for (int i = 0; i < inputs.length; i++) {
-			extendedInput[i + m] = inputs[i];
-		}
-		fullyConnected.apply(extendedInput, outputs);
-		activationFun.apply(outputs, outputs);
-		for (int i = 0; i < outputs.length; i++) {
-			if (Double.isNaN(outputs[i])) {
-				System.exit(-1);
+		assert (outputs.length == m && inputs.length == n);
+		for (int i = 0; i < m; i++) {
+			outputs[i] = -weights[i][n + m];
+			for (int j = 0; j < n; j++) {
+				outputs[i] += weights[i][j] * inputs[j];
 			}
-			extendedInput[i] = outputs[i];
+			for (int j = n; j < n + m; ++j) {
+				outputs[i] += weights[i][j] * context[j - n];
+			}
 		}
+		for (int i = 0; i < m; ++i) {
+			context[i] = activation.apply(outputs[i]);
+		}
+	}
+
+	@Override
+	public double[] getWeights() {
+		double[] result = new double[(n + 1) * m];
+		for (int i = 0; i < m; ++i) {
+			for (int j = 0; j < n + 1; ++j) {
+				result[i * m + j] = weights[i][j];
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public double getWeight(int i, int j) {
+		return weights[j][i];
+	}
+	
+	@Override
+	public void updateWeight(int i, int j, double value) {
+		weights[i][j] += value;
 	}
 
 	@Override
 	public int getNumberOfInputs() {
 		return n;
-	}
-
-	@Override
-	public void setWeigths(double[] weights, int offset) {
-		fullyConnected.setWeigths(weights, offset);
-	}
-
-	@Override
-	public double[] getWeights() {
-		return fullyConnected.getWeights();
 	}
 
 	@Override
@@ -72,46 +94,54 @@ public class ElmanLayer extends StatefulLayer implements Serializable{
 
 	@Override
 	public int getNumberOfWeights() {
-		return fullyConnected.getNumberOfWeights();
+		return (n + m + 1) * m;
+	}
+
+	@Override
+	public Iterable<Integer> connectedNeuronsIndexes(int inputIndex) {
+		throw new IllegalAccessError("Not yet implemented");
+	}
+
+	@Override
+	public PrototypeLayer duplicate() {
+		ElmanLayer res = new ElmanLayer(n, m, activation);
+		return res;
 	}
 
 	@Override
 	public double[] getContext() {
-		double[] ret = new double[m];
-		for (int i = 0; i < m; i++) {
-			ret[i] = extendedInput[i];
-		}
-		return ret;
+		return context;
 	}
 
 	@Override
 	public void setContext(double[] context, int offset) {
-		for (int i = 0; i < m; i++) {
-			extendedInput[i] = context[i + offset];
+		for (int i = 0; i < m; ++i) {
+			this.context[i] = context[offset++];
 		}
 	}
-	
+
 	@Override
 	public int getContextSize() {
 		return m;
 	}
-	
-	public static void main(String[] args) {
-		ElmanLayer el = new ElmanLayer(3, 1, new NormalDist(0, 1), ActivationFun.sigmoid);
 
-		double[] inputs = new double[] { 0.1, 0.2, 0.3 };
+	public static void main(String[] args) {
+
+		Layer l = new ElmanLayer(3, 1, (x) -> x > 0 ? 1 : 0, (n) -> {
+			double[] res = new double[n];
+			res[0] = 4;
+			for (int i = 1; i < n; i++)
+				res[i] = 1;
+			return res;
+		});
+
+		double[] inputs = new double[] { 1, 1, 2.01 };
 		double[] outputs = new double[1];
 
-		el.apply(inputs, outputs);
-
-		System.out.println(Arrays.toString(outputs));
-		System.out.println(Arrays.toString(el.extendedInput));
-
-		el.apply(inputs, outputs);
+		l.apply(inputs, outputs);
 
 		System.out.println(Arrays.toString(outputs));
 
-		System.out.println(Arrays.toString(el.extendedInput));
 	}
 
 }
